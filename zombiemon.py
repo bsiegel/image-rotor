@@ -14,20 +14,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import random
+import re
+from google.appengine.api import urlfetch
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 
 
+def getImageURIs():
+    pageURI = 'http://www.redbubble.com/people/rpgesus/journal/3882072-zombiemon'
+    result = urlfetch.fetch(pageURI)
+    if result.status_code == 200:
+        body = result.content
+        URIs = re.findall('http://images-?\d?\.redbubble\.net/img/clothing[^"]+\.jpg', body)
+        return URIs
+
 class MainHandler(webapp.RequestHandler):
     def get(self):
-        self.response.out.write('Hello world!')
+        imgURIs = getImageURIs()
+        imgData = urlfetch.fetch(random.choice(imgURIs))
+        self.response.headers['Content-Type'] = 'image/jpeg'
+        if imgData.status_code == 200:
+            self.response.out.write(imgData.content)
 
 
 def main():
-    application = webapp.WSGIApplication([('/', MainHandler)],
+    application = webapp.WSGIApplication([('/zombiemon.jpg', MainHandler)],
                                          debug=True)
     util.run_wsgi_app(application)
 
 
-if __name__ == '__main__':
+if __name__ == '__zombiemon__':
     main()
